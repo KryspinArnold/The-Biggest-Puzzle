@@ -21,21 +21,20 @@ rect.square{
 	opacity: 1;
 }
 
-rect.piece{
-	fill: #A10518;
+rect.segment{
 	stroke: black;
 	stroke-width: 1;
 	opacity: 1;
 }
 
 #header{
-    height: 100px;
-	background-color: #A00000;
+	height: 100px;
+	background-color: #385A72;
 }
 
 #main{
 	margin: 0 auto;
-	background-color: #00A000;
+	background-color: #6491A1;
 }
 
 #board{
