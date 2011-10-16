@@ -1,4 +1,4 @@
-html, body, div {
+html, body, div{
 	margin: 0px;
 	padding: 0px;
 	font-family: Verdana, Geneva, sans-serif;
@@ -7,11 +7,11 @@ html, body, div {
 }
 
 h1 {
-	margin: 0px
+	margin: 0px;
 }
 
 h3 {
-	margin: 0px
+	margin: 0px;
 }
 
 rect.square{
@@ -23,22 +23,22 @@ rect.square{
 
 rect.segment{
 	stroke: black;
-	stroke-width: 1;
+	stroke-width: 1px;
 	opacity: 1;
 }
 
 #header{
-	height: 100px;
+	height: 85px;
 	background-color: #385A72;
 }
 
 #main{
-	margin: 0 auto;
+	margin: 0px;
 	background-color: #6491A1;
 }
 
 #board{
-	margin: 0px auto;
+	margin: 0px;
 }
 
 #copyright{

@@ -1,37 +1,96 @@
-var level = 5;
-var maxPieceLength = 4;
-var squares = new Array();
-var pieces = new Array();
-var freeSpaces = new Array();
-var colours = new Array();
-var baseLightColour = "CC";
-var baseDarkColour = "66";
-var squareSize = 50;
-var snapAmount = 10;
-var downPageX = 0;
-var downPageY = 0;
-var downOffsetX = 0;
-var downOffsetY = 0;
-var leftMargin = 200;
-var movingPiece = null;
-
-create_squares();
-create_pieces();
-create_colours();
-
-$(document).ready(function() {
+function initialize() {
 
 	/* Stop the Right-click context menu from showing */
-	$(document).bind("contextmenu",function(e){
+	$(document).bind("contextmenu", function(e){
 		return false;
 	});
 	
-	/* Initialize the piece */
-	var pieceInit = $(".piece");
-	pieceInit.attr('data-startX', pieceInit.offset().left);
-	pieceInit.attr('data-startY', pieceInit.offset().top);
-	pieceInit.attr('data-offsetX', 0);
-	pieceInit.attr('data-offsetY', 0);
+	$("#level").html("Level: " + level);
+
+	var main = $("#main");
+	
+	/* Have to append svg because jQuery can't handle .html with svg */
+	var append = '<svg id="svg" xmlns="http://www.w3.org/2000/svg" x=0 y=0 height=' + ((squareSize * level) + 1)
+		+ ' width="100%" >'; /*' + (((squareSize * level) + leftMargin) + 1) + '>';*/
+
+	/* Creating linear gradients */
+	append += '<defs>';
+	for (var i = 0; i < pieceData.length; i++)
+	{
+		append += '<linearGradient id="colorGradient' + i + '" x1="0%" y1="0%" 2="0%" y2="100%" spreadMethod="pad">'
+			+ '<stop offset="0%" stop-color="' + colours[i].light + '" stop-opacity="1"/>'
+			+ '<stop offset="100%" stop-color="' + colours[i].dark + '" stop-opacity="1"/>'
+			+ '</linearGradient>';
+	}
+	append += '</defs>';
+	
+	/* Creating the squares for the board */
+	for (var y = 0; y < level; y++)
+	{
+		for (var x = 0; x < level; x++)
+		{
+			var posX = ((x * squareSize) + 0.5) + leftMargin;
+			var posY = ((y * squareSize) + 0.5);
+			append += '<rect class="square" x=' + posX + ' y=' + posY
+				+ ' width="' + squareSize + '" height="' + squareSize + '"/>';
+		}
+	}
+	
+	/* Create all the pieces */
+	for (var i = 0, li = pieceData.length; i < li; i++)
+	{
+		append += '<g class="piece">';
+	
+		for (var j = 0, lj = pieceData[i].length; j < lj; j++)
+		{
+			/* Base the position of each segment in the piece off the first segment */
+			var posX = (squares[pieceData[i][j]].x - squares[pieceData[i][0]].x) * squareSize;
+			var posY = (squares[pieceData[i][j]].y - squares[pieceData[i][0]].y) * squareSize;
+		
+			append += '<rect class="segment" fill="url(#colorGradient' + i + ')" x = ' + (posX + 0.5) + ' y = ' + (posY + 0.5) + ' width="' + squareSize + '" height="' + squareSize + '" rx = 10 ry = 10 />';
+		}
+		
+		append += '</g>';
+	}
+	
+	append += '</svg>';
+	main.append(append);
+	
+	/* Add the Pieces to an Object */
+	pieces = $(".piece");
+	pieces.data('offsetX', 0);
+	pieces.data('offsetY', 0);
+	pieces.data('rotation', 0);
+	pieces.data('corX', 0);
+	pieces.data('corY', 0);
+	pieces.data('segmentX', 0);
+	pieces.data('segmentY', 0);
+	
+	/* Firefox puts some funny padding on the Rect when there is a border this means that the offset is not right */
+	var firstSegment = pieces.first().children().first();
+	var firefoxPadding = parseFloat(firstSegment.attr('x')) - firstSegment.offset().left;
+
+	pieces.each(function(){
+		/* Because of the way they are generated, some pieces are off the screen, so I have to shift them here */
+		var leftOffset = $(this).offset().left;
+		
+		if (leftOffset < firefoxPadding)
+		{
+			var segments = $(this).children();
+			segments.each(function(){
+				$(this).attr('x', parseFloat($(this).attr('x')) - (leftOffset + firefoxPadding));
+			});
+		}
+
+		/* Set the starting offset of each piece */
+		$(this).data('startX', $(this).offset().left);
+		$(this).data('startY', $(this).offset().top);
+	});
+};
+
+$(document).ready(function() {
+
+	initialize();
 	
 	/* Create a 2D array for all the squares on the board */
 	/*for (var i = 0; i < level; i++)
@@ -39,28 +98,28 @@ $(document).ready(function() {
 		squares[i] = new Array(level);
 	}*/
 
-	/*var test = "";
+	var test = "";
 	
-	for (var i = 0, li = pieces.length; i < li; i++)
+	for (var i = 0, li = pieceData.length; i < li; i++)
 	{
 		test += "(";
 		
-		for (var j = 0, lj = pieces[i].length; j < lj; j++)
+		for (var j = 0, lj = pieceData[i].length; j < lj; j++)
 		{
-			test += pieces[i][j] + ", ";
+			test += pieceData[i][j] + ", ";
 		}
 		
 		test += ") ";
 	}
 	
 	$("#test1").html(test);
-	*/
 	
 	/* Mouse down - Handles all the mouse clicks */
-	$(".piece").mousedown(function(e) {
+	$(".segment").mousedown(function(e) {
 		
-		var piece = $(this);
-		
+		var segment = $(this);
+		var piece = $(this).parent(".piece");
+
 		/* Work out which mouse button was clicked */
 		switch (e.which) {
 			/* Left click for moving the piece */
@@ -72,24 +131,46 @@ $(document).ready(function() {
 				
 				downOffsetX = piece.offset().left;
 				downOffsetY = piece.offset().top;
+				
+				piece.data('offsetX', (piece.data('segmentX') - piece.data('startX')) + piece.offset().left);
+				piece.data('offsetY', (piece.data('segmentY') - piece.data('startY')) + piece.offset().top);
+				
+				$("#test1").html('Segment Offset ' + segment.offset().left + ', ' + segment.offset().top);
+				$("#test2").html('Piece Offset ' + piece.offset().left + ', ' + piece.offset().top);
+				$("#test3").html('Piece Data Offset ' + piece.data('offsetX') + ', ' + piece.data('offsetY'));
+				$("#test4").html('Piece Data Segment ' + piece.data('segmentX') + ', ' + piece.data('segmentY'));
+
 				break;
 			case 2:
 				alert('Middle mouse button pressed');
 				break;
 			/* Right click for rotating the piece */
 			case 3:
-				downOffsetX = piece.offset().left;
-				downOffsetY = piece.offset().top;
+				var corX = parseFloat(segment.attr('x')) + Math.floor(squareSize / 2);
+				var corY = parseFloat(segment.attr('y')) + Math.floor(squareSize / 2);
 				
-				piece.attr('data-angle', (parseInt(piece.attr('data-angle')) + 45));
-				transform(piece, 0, 0);
+				piece.data('corX', corX);
+				piece.data('corY', corY);
+							
+				piece.data('rotation', piece.data('rotation') + 90);
+
+				/* This is a bit complicated... I am getting the coordinates of the segment that you click on,
+				subtracting the start cordinates so we get the cordinates in the svg, then subtracting the 
+				coordinates of the segment inside the piece so we can get the coordinates that the piece needs to be translated */
 				
-				/* We need to store the amount that the offset changed, so we can rotate around the correct point */
-				var oldOffsetX = parseFloat(piece.attr('data-offsetX'));
-				var oldOffsetY = parseFloat(piece.attr('data-offsetY'));
+				piece.data('offsetX', (segment.offset().left - piece.data('startX')) - parseFloat(segment.attr('x')));
+				piece.data('offsetY', (segment.offset().top - piece.data('startY')) - parseFloat(segment.attr('y')));
 				
-				piece.attr('data-offsetX', oldOffsetX + (downOffsetX - piece.offset().left));
-				piece.attr('data-offsetY', oldOffsetY + (downOffsetY - piece.offset().top));
+				$("#test1").html('Segment Offset ' + segment.offset().left + ', ' + segment.offset().top);
+				$("#test2").html('Piece Offset ' + piece.offset().left + ', ' + piece.offset().top);
+				$("#test3").html('Piece Data Offset ' + piece.data('offsetX') + ', ' + piece.data('offsetY'));
+				$("#test4").html('Piece Data Segment ' + piece.data('segmentX') + ', ' + piece.data('segmentY'));
+				$("#test5").html('Segment XY ' + parseFloat(segment.attr('x')) + ', ' + parseFloat(segment.attr('y')));
+				
+				transform(piece, piece.data('offsetX'), piece.data('offsetY'));
+				
+				piece.data('segmentX', ((segment.offset().left) - parseFloat(segment.attr('x')) - piece.offset().left));
+				piece.data('segmentY', ((segment.offset().top) - parseFloat(segment.attr('y')) - piece.offset().top));
 				
 				break;
 		}
@@ -112,257 +193,12 @@ $(document).ready(function() {
 	
 		if (movingPiece == null) return;
 		
-		transform(movingPiece, (e.pageX - downPageX), (e.pageY - downPageY));
-		
+		var translateX = (e.pageX - downPageX) + movingPiece.data('offsetX');
+		var translateY = (e.pageY - downPageY) + movingPiece.data('offsetY');
+
+		transform(movingPiece, translateX, translateY);
+				
 		/* Have to return false, else firefox treats it like draging an image */
 		return false;
 	});
 });
-
-/* Square class */
-function Square(x, y, pieceID)
-{
-	this.x = x;
-	this.y = y;
-	this.pieceID = pieceID;
-}
-
-/* Colour class */
-/* We are given the light and dark hex values and the order to add everything together */
-function Colour(ldHex, order)
-{
-	var ldStatic = new Array(baseLightColour, baseDarkColour);
-	var ldColour = new Array("#", "#");
-	
-	for (var i = 0; i < 2; i++)
-	{
-		/* TODO: Work out the combinations automatically */
-		switch(order)
-		{
-			case 0:
-			ldColour[i] += ldStatic[i] + ldHex[i] + "00";
-			break;
-			case 1:
-			ldColour[i] += ldStatic[i] + "00" + ldHex[i];
-			break;
-			case 2:
-			ldColour[i] += ldHex[i] + ldStatic[i] + "00";
-			break;
-			case 3:
-			ldColour[i] += ldHex[i] + "00" + ldStatic[i];
-			break;
-			case 4:
-			ldColour[i] += "00" + ldStatic[i] + ldHex[i];
-			break;
-			case 5:
-			ldColour[i] += "00" + ldHex[i] + ldStatic[i];
-			break;
-		}
-	}
-
-	this.light = ldColour[0];
-	this.dark = ldColour[1];
-}
-
-/* Creates all the beautiful colour combinations */
-function create_colours()
-{
-	/* To get nice colours, for RGB, one is CC, one is 0 and one is evenly distributed between 0 and CC */
-	/* The dark colour uses 66 instead of CC */
-	
-	/* It doesn't matter if we create too many colours, we just won't use them all */
-	var colourDivison = Math.ceil(pieces.length / 6);
-	var lightInt = parseInt(baseLightColour, 16);
-	var darkInt = parseInt(baseDarkColour, 16);
-	
-	for (var i = 1; i <= colourDivison; i++)
-	{
-		var lightHex = Math.floor(i / colourDivison * lightInt).toString(16);
-		var darkHex = Math.floor(i / colourDivison * darkInt).toString(16);
-		
-		/* Creates the six combinations of these colours */
-		for (var j = 0; j < 6; j++)
-		{
-			colours.push(new Colour(new Array(lightHex, darkHex), j));
-		}
-	}
-}
-
-/* Sets up the squares array */
-function create_squares()
-{
-	for (var y = 0; y < level; y++)
-	{
-		for (var x = 0; x < level; x++)
-		{
-			squares.push(new Square(x, y, -1));
-		}
-	}
-}
-
-/* Randomly generates all the puzzle pieces for the board */
-function create_pieces()
-{
-	/* Loop through all the squares on the board */
-	for (var i = 0, li = squares.length; i < li; i++)
-	{
-		/* If the square is blank, then we want to create a new piece */
-		if (squares[i].pieceID == -1)
-		{
-			new_piece(i);
-			
-			var pieceCount = (pieces.length - 1)
-			
-			while (pieces[pieceCount].length < maxPieceLength && freeSpaces[pieceCount].length > 0)
-			{
-				/* Get a random free space from around the current piece */
-				var randomIndex = Math.floor(Math.random() * freeSpaces[pieceCount].length);
-				var randomSquareID = freeSpaces[pieceCount][randomIndex];
-				
-				/* Remove the free space */
-				freeSpaces[pieceCount].splice(randomIndex, 1);
-				
-				/* Add the new seqment */
-				new_segment(randomSquareID);
-			}
-		}
-	}
-}
-
-function new_piece(squareID)
-{
-	pieces.push(new Array());
-	freeSpaces.push(new Array());
-	
-	new_segment(squareID);
-}
-
-function new_segment(squareID)
-{
-	/* Add the new segment to the piece */
-	pieces[pieces.length - 1].push(squareID);
-	squares[squareID].pieceID = (pieces.length - 1);
-
-	/* Adding possible free spaces to the current piece */
-	if (direction(squareID, 0) != -1)
-	{
-		freeSpaces[pieces.length - 1].push(direction(squareID, 0));
-	}
-	
-	if (direction(squareID, 1) != -1)
-	{
-		freeSpaces[pieces.length - 1].push(direction(squareID, 1));
-	}
-	
-	if (direction(squareID, 2) != -1)
-	{
-		freeSpaces[pieces.length - 1].push(direction(squareID, 2));
-	}
-	
-	if (direction(squareID, 3) != -1)
-	{
-		freeSpaces[pieces.length - 1].push(direction(squareID, 3));
-	}	
-}
-
-/* Given a square and a direction, this returns the squareID that it goes to */
-/* It returns -1 if the direction goes off the board, or the square is used by another piece */
-function direction(squareID, direction)
-{
-	var returnSquareID = -1;
-
-	/* North */
-	if (direction == 0)
-	{
-		if (squareID > level)
-		{
-			returnSquareID = (squareID - level);
-		}
-	}
-	/* East */
-	else if (direction == 1)
-	{
-		if (((squareID + 1) % level) > 0)
-		{
-			returnSquareID = (squareID + 1);
-		}
-	}
-	/* South */
-	else if (direction == 2)
-	{
-		if (squareID < (level * (level - 1)))
-		{
-			returnSquareID = (squareID + level);
-		}
-	}
-	/* West */
-	else if (direction == 3)
-	{
-		if ((squareID % level) > 0)
-		{
-			returnSquareID = (squareID - 1);
-		}
-	}
-	
-	/* Check that the squareID isn't already used in another piece */
-	if (returnSquareID != -1 && squares[returnSquareID].pieceID != -1)
-	{
-		returnSquareID = -1;
-	}
-	
-	return returnSquareID;
-}
-
-/* Squares on the board */
-function square(x, y, id)
-{
-	return '<rect class="square" id="' + id + '" x=' + (x + 0.5) + ' y=' + (y + 0.5) + ' width="' + squareSize + '" height="' + squareSize + '"/>';
-}
-
-/* One segment of the puzzle piece */
-function segment(x, y, pieceID)
-{
-	return '<rect class="segment" fill="url(#colorGradient' + pieceID + ')" x = ' + (x + 0.5) + ' y = ' + (y + 0.5) + ' width="' + squareSize + '" height="' + squareSize + '" rx = 10 ry = 10 />';
-}
-
-function transform(piece, mouseMoveX, mouseMoveY)
-{
-	/* Works out how far to translate the piece */
-	var translateX = ((downOffsetX + parseFloat(piece.attr('data-offsetX'))) - piece.attr('data-startX')) + mouseMoveX;
-	var translateY = ((downOffsetY + parseFloat(piece.attr('data-offsetY'))) - piece.attr('data-startY')) + mouseMoveY;
-	
-	/* Works out how much to rotate the piece */
-	var rotate = piece.attr('data-angle');
-	
-	/*$("#test1").html(downOffsetX + ', ' + downOffsetY);*/
-	/*$("#test2").html(piece.attr('data-startX') + ', ' + piece.attr('data-startY'));*/
-	/*$("#test3").html(mouseMoveX + ', ' + mouseMoveY);
-	$("#test4").html(downPageX + ', ' + downPageY);
-	$("#test5").html(translateX + ', ' + translateY);*/
-	
-	/* Snapping - Sometimes jQuery is REALLY cool */
-	var snappingSquare = $(".square")
-		.filter(function () {
-			return Math.abs($(this).attr('x') - translateX) < snapAmount
-			&& Math.abs($(this).attr('y') - translateY) < snapAmount;
-		}).first();
-	
-	if (snappingSquare.length > 0)
-	{
-		translateX = snappingSquare.attr('x');
-		translateY = snappingSquare.attr('y')
-	}
-	
-	/* Set bounds for the piece */
-	if (translateX < 0)
-	{
-		translateX = 0;
-	}
-	
-	if (translateY < 0)
-	{
-		translateY = 0;
-	}
-	
-	piece.attr('transform', 'translate(' + translateX + ', ' + translateY + ') rotate(' + rotate + ', ' + (squareSize / 2) + ', ' + (squareSize / 2) + ')');
-}
