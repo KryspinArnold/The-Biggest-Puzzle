@@ -10,6 +10,7 @@
 <body>
 	<div id="header">
 		<h1>The Biggest Puzzle</h1>
+		Put the blocks in the square. Left Mouse for move, Right Mouse for rotate.
 	</div>
 	<div id="main">
 		<h3 id="level"></h3>
@@ -20,5 +21,15 @@
 	<div id="test3"></div>
 	<div id="test4"></div>
 	<div id="test5"></div>
+	<svg height=0 width=0>
+		<filter id="dropshadow" height="130%">
+			<feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+			<feOffset dx="0" dy="0" result="offsetblur"/>
+			<feMerge>
+				<feMergeNode />
+				<feMergeNode in="SourceGraphic"></feMergeNode>
+			</feMerge>
+		</filter>
+	</svg>
 </body>
 </html>

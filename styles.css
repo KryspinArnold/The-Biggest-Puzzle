@@ -3,7 +3,7 @@ html, body, div{
 	padding: 0px;
 	font-family: Verdana, Geneva, sans-serif;
 	font-size: 14px;
-	background-color: #6491A1;
+	background-color: #385A72;
 }
 
 h1 {
@@ -29,16 +29,11 @@ rect.segment{
 
 #header{
 	height: 85px;
-	background-color: #385A72;
+	text-align: center;
 }
-
-#main{
-	margin: 0px;
+	
+#svg{
 	background-color: #6491A1;
-}
-
-#board{
-	margin: 0px;
 }
 
 #copyright{
