@@ -28,15 +28,33 @@ rect.segment{
 }
 
 #header{
-	height: 85px;
+	height: 60px;
 	text-align: center;
+	background-color: #6491A1;
 }
-	
+
 #svg{
 	background-color: #6491A1;
 }
 
+#nav{
+	height: 40px;
+	text-align: center;
+
+}
+
+#nav_list dt
+{
+	display: inline;
+	list-style-type: none;
+}
+
+dt{
+	padding: 0px 20px;
+}
+
 #copyright{
+	height: 30px;
 	padding: 15px;
 	text-align: center;
 	font-size: 12px;

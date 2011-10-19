@@ -1,72 +1,3 @@
-var level = 10;
-var maxPieceLength = 10;
-var squareSize = 50;
-var pieces;
-var squares = new Array();
-var pieceData = new Array();
-var freeSpaces = new Array();
-var colours = new Array();
-var baseLightColour = "CC";
-var baseDarkColour = "66";
-var snapAmount = 10;
-var downPageX = 0;
-var downPageY = 0;
-var downOffsetX = 0;
-var downOffsetY = 0;
-var windowWidth = $(window).width();
-var leftMargin = Math.floor((windowWidth - (squareSize * level))/ 2);
-var topMargin = 40;
-var movingPiece = null;
-
-create_squares();
-create_pieces();
-create_colours();
-
-/* Square class */
-function Square(x, y, pieceID)
-{
-	this.x = x;
-	this.y = y;
-	this.pieceID = pieceID;
-}
-
-/* Colour class */
-/* We are given the light and dark hex values and the order to add everything together */
-function Colour(ldHex, order)
-{
-	var ldStatic = new Array(baseLightColour, baseDarkColour);
-	var ldColour = new Array("#", "#");
-	
-	for (var i = 0; i < 2; i++)
-	{
-		/* TODO: Work out the combinations automatically */
-		switch(order)
-		{
-			case 0:
-			ldColour[i] += ldStatic[i] + ldHex[i] + "00";
-			break;
-			case 1:
-			ldColour[i] += ldStatic[i] + "00" + ldHex[i];
-			break;
-			case 2:
-			ldColour[i] += ldHex[i] + ldStatic[i] + "00";
-			break;
-			case 3:
-			ldColour[i] += ldHex[i] + "00" + ldStatic[i];
-			break;
-			case 4:
-			ldColour[i] += "00" + ldStatic[i] + ldHex[i];
-			break;
-			case 5:
-			ldColour[i] += "00" + ldHex[i] + ldStatic[i];
-			break;
-		}
-	}
-
-	this.light = ldColour[0];
-	this.dark = ldColour[1];
-}
-
 /* Creates all the beautiful colour combinations */
 function create_colours()
 {
@@ -219,10 +150,6 @@ function direction(squareID, direction)
 
 function transform(piece, translateX, translateY)
 {
-	/* Works out how far to translate the piece */
-	/*var translateX = piece.data('offsetX') + mouseMoveX; /* + (downOffsetX - piece.data('startX'));*/
-	/*var translateY = piece.data('offsetY') + mouseMoveY; /* + (downOffsetY - piece.data('startY'));*/
-
 	/* Works out how much to rotate the piece */
 	var rotate = piece.data('rotation');
 	var corX = piece.data('corX');
@@ -233,47 +160,105 @@ function transform(piece, translateX, translateY)
 	$("#test3").html('Data Segment' + piece.data('segOffsetX') + ', ' + piece.data('segOffsetY'));
 	$("#test4").html('Data Offset' + piece.data('offsetX') + ', ' + piece.data('offsetY'));
 	$("#test5").html('Translate' + translateX + ', ' + translateY);*/
+
+	/* Set bounds for the piece */
+	if (actualX < 0) {
+		translateX = piece.data('segOffsetX');
+	}
 	
-	var actualX = (translateX - piece.data('segOffsetX'));
+	if (actualY < 0) {
+		translateY = piece.data('segOffsetY');
+	}
+	
+		/* Snapping */
+	var snapped = true;
+	var snapSquares = $(".square");
+	
+		var actualX = (translateX - piece.data('segOffsetX'));
 	var actualY = (translateY - piece.data('segOffsetY'));
 	
-	/* Snapping - Sometimes jQuery is REALLY cool */
-	var snappingSquare = $(".square")
-		.filter(function() {
+	
+		/* Get the square that the piece is snapped to */
+	var pieceSnapped = snapSquares.filter(function() {
 			return Math.abs($(this).attr('x') - actualX) < snapAmount
 			&& Math.abs($(this).attr('y') - actualY) < snapAmount;
 		}).first();
 	
-	if (snappingSquare.length > 0)
-	{
-		translateX = parseFloat(snappingSquare.attr('x')) + piece.data('segOffsetX');
-		translateY = parseFloat(snappingSquare.attr('y')) + piece.data('segOffsetY');
+	$("#test1").html("Segments Off: ");
+	$("#test4").html("Segments: ");
+	
+	/* Check each segment is snapped to a square */
+	piece.children().each(function() {
+	
+		var segment = $(this);
+	
+		$("#test4").append("(" + (actualX + parseFloat(segment.attr('x'))) + " " + (actualY + parseFloat(segment.attr('y'))) + ") ");
+		$("#test1").append("(" + (segment.offset().left - piece.data('startX')) + " " + (segment.offset().top - piece.data('startY')) + ") " + piece.data('startX') + " " + piece.data('startY') + " ");
+	
+		var segmentSnapped = snapSquares.filter(function() {
+			return Math.abs($(this).attr('x') - (segment.offset().left - piece.data('startX'))) < snapAmount
+				&& Math.abs($(this).attr('y') - (segment.offset().top - piece.data('startY'))) < snapAmount;
+		}).first();
+	
+		if (segmentSnapped.length == 0) {
+			/*$("#test1").html("Segment not snapped: " + (parseFloat(segment.attr('x'))) + " "
+				+ (parseFloat(segment.attr('y'))));*/
+			$("#test2").html("Actual + Seg not snapped: " + (segment.offset().left - piece.data('startX')) + " "
+				+ (segment.offset().top - piece.data('startY')));
+			snapped = false;
+			return;
+		}
+	});
+	
+
+	
+	$("#test5").html(snapped + " " + pieceSnapped.length);
+	
+	if (pieceSnapped.length > 0 && snapped) {
+	
+		translateX = parseFloat(pieceSnapped.attr('x')) + piece.data('segOffsetX');
+		translateY = parseFloat(pieceSnapped.attr('y')) + piece.data('segOffsetY');
 		
-		/*piece.removeAttr('filter');*/
 		piece.children().each(function() {
 			$(this).attr('rx', 0);
 			$(this).attr('ry', 0);
+			
+			if (puzzle_solved)
+			{
+				$("#header").html("YOU WIN!!!");
+			}
 		});
-	}
-	else
-	{
-		/*piece.attr('filter', 'url(#dropshadow)');*/
+	
+	} else {
+	
 		piece.children().each(function() {
 			$(this).attr('rx', 10);
 			$(this).attr('ry', 10);
 		});
 	}
 	
-	/* Set bounds for the piece */
-	if (actualX < 0)
-	{
-		translateX = piece.data('segOffsetX');
-	}
-	
-	if (actualY < 0)
-	{
-		translateY = piece.data('segOffsetY');
-	}
-	
+		/* Finally do the transformation */
 	piece.attr('transform', 'translate(' + translateX + ', ' + translateY + ') rotate(' + rotate + ', ' + corX + ', ' + corY + ')');
+	
+}
+
+function puzzle_solved()
+{
+	var puzzleSolved = true;
+	
+	var solvedSquares = $(".square");
+	
+	/* Each square needs a segment on it */
+	solvedSquares.each(function() {
+	
+		var square = $(this);
+		
+		pieces
+	
+	});
+
+	pieces.each(function() {
+	
+	});
+
 }

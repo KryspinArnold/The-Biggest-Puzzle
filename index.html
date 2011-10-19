@@ -3,8 +3,7 @@
 <title>The Biggest Puzzle</title>
 <meta charset="utf-8" />
 <script type="text/javascript" src="jquery-1.6.4.js"></script>
-<script type="text/javascript" src="functions.js"></script>
-<script type="text/javascript" src="events.js"></script>
+<script type="text/javascript" src="main.js"></script>
 <link href="styles.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -12,10 +11,18 @@
 		<h1>The Biggest Puzzle</h1>
 		Put the blocks in the square. Left Mouse for move, Right Mouse for rotate.
 	</div>
+	<div id="nav">
+		<dl id="nav_list">
+			<dt id="level"></dt>
+			<dt id="piece_amount"></dt>
+			<dt id="piece_length"></dt>
+			<dt id="refresh"></dt>
+		</dl>
+	</div>
 	<div id="main">
-		<h3 id="level"></h3>
 	</div>
 	<div id="copyright">Copyright &copy; Kryspin Arnold 2011</div>
+	<div id="footer"></div>
 	<div id="test1"></div>
 	<div id="test2"></div>
 	<div id="test3"></div>
