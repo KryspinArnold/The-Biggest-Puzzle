@@ -1,5 +1,12 @@
 function initialize() {
 
+	var windowWidth = $(window).width();
+	var leftMargin = Math.floor((windowWidth - (squareSize * level))/ 2);
+
+	create_squares();
+	create_pieces();
+	create_colours();
+
 	/* Stop the Right-click context menu from showing */
 	$(document).bind("contextmenu", function(e){
 		return false;
@@ -28,7 +35,7 @@ function initialize() {
 		{
 			var posX = ((x * squareSize) + 0.5) + leftMargin;
 			var posY = ((y * squareSize) + 0.5) + topMargin;
-			$("#test3").append("(" + posX + ", " + posY + ") ");
+
 			append += '<rect class="square" x=' + posX + ' y=' + posY
 				+ ' width="' + squareSize + '" height="' + squareSize + '" />';
 		}
@@ -52,7 +59,7 @@ function initialize() {
 	}
 	
 	append += '</svg>';
-	main.append(append);
+	main.html(append);
 	
 	/* Add the Pieces to an Object */
 	pieces = $(".piece");
@@ -154,8 +161,8 @@ function initialize() {
 	
 	$("#svg").attr('height', svgHeight + (topMargin * 2));
 	
-	$("#level").html("<b>Level:</b> " + level);
-	$("#piece_amount").html("<b>Pieces:</b> " + pieces.length);
-	$("#piece_length").html("<b>Max Piece Length:</b> " + maxPieceLength);
+	$("#level").html('<b>Level:</b> <input type="text" id="input_level" value="' + level + '">');
+	$("#piece_amount").html('<b>Pieces:</b> ' + pieces.length);
+	$("#piece_length").html('<b>Max Piece Length:</b> <input type="text" id="input_piece_length" value="' + maxPieceLength + '">');
 	
 };

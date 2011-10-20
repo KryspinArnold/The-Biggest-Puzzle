@@ -3,10 +3,10 @@ var level = 5;
 var maxPieceLength = 4;
 var squareSize = 50;
 var pieces;
-var squares = new Array();
-var pieceData = new Array();
-var freeSpaces = new Array();
-var colours = new Array();
+var squares;
+var pieceData;
+var freeSpaces;
+var colours;
 var baseLightColour = "CC";
 var baseDarkColour = "66";
 var snapAmount = 10;
@@ -14,8 +14,6 @@ var downPageX = 0;
 var downPageY = 0;
 var downOffsetX = 0;
 var downOffsetY = 0;
-var windowWidth = $(window).width();
-var leftMargin = Math.floor((windowWidth - (squareSize * level))/ 2);
 var topMargin = 40;
 var movingPiece = null;
 
@@ -25,33 +23,70 @@ document.write('<script type="text/javascript" src="initialize.js"></script>');
 
 $(document).ready(function() {
 
-	create_squares();
-	create_pieces();
-	create_colours();
 	initialize();
+	add_mouse_events();
 	
-	/* Create a 2D array for all the squares on the board */
-	/*for (var i = 0; i < level; i++)
-	{
-		squares[i] = new Array(level);
-	}*/
-
-	var test = "";
-	
-	for (var i = 0, li = pieceData.length; i < li; i++)
-	{
-		test += "(";
+    $(document).keypress(function(e){
+        if (e.keyCode==27){
+            $("#background").fadeOut("slow");
+            $("#popup").fadeOut("slow");
+        }
+    });
+ 
+    $(".restart_button").click(function(){
+        $("#background").fadeOut("slow");
+        $("#popup").fadeOut("slow");
 		
-		for (var j = 0, lj = pieceData[i].length; j < lj; j++)
+		var newLevel = parseInt($("#input_level").val());
+		var newPieceLength = parseInt($("#input_piece_length").val());
+		
+		if (newLevel >= 4 && newLevel <= 20)
 		{
-			test += pieceData[i][j] + ", ";
+			$("#input_level").val(newLevel);
+			level = newLevel;
 		}
 		
-		test += ") ";
-	}
+		if (newPieceLength >= 3 && newPieceLength <= (level * level))
+		{
+			$("#input_piece_length").val(newPieceLength);
+			maxPieceLength = newPieceLength;
+		}
+		
+		initialize();
+		add_mouse_events();
+    });
+ 
+	/* Mouse Up - Stops dragging the piece around */
+	$(document).mouseup(function(e){
+		movingPiece = null;
+		
+		/* Check if the puzzle is solved */
+		if (puzzle_solved()){
+			$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
+			$("#popup").center().fadeIn("slow");
+		}
 	
-	$("#test1").html(test);
+		/* Have to return false, else firefox treats it like dragging an image */
+		return false;
+	})
+
+	/* Mouse Move - Drags the piece around */
+	$(document).mousemove(function(e){
 	
+		if (movingPiece == null) return;
+		
+		var translateX = (e.pageX - downPageX) + movingPiece.data('offsetX');
+		var translateY = (e.pageY - downPageY) + movingPiece.data('offsetY');
+
+		transform(movingPiece, translateX, translateY);
+				
+		/* Have to return false, else firefox treats it like draging an image */
+		return false;
+	});
+});
+
+function add_mouse_events()
+{
 	/* Mouse down - Handles all the mouse clicks */
 	$(".segment").mousedown(function(e) {
 		
@@ -113,30 +148,7 @@ $(document).ready(function() {
 				break;
 		}
 		
-		
 		/* Have to return false, else firefox treats it like draging an image */
 		return false;
 	});
-	
-	/* Mouse Up - Stops dragging the piece around */
-	$(document).mouseup(function(e){
-		movingPiece = null;
-		
-		/* Have to return false, else firefox treats it like dragging an image */
-		return false;
-	})
-
-	/* Mouse Move - Drags the piece around */
-	$(document).mousemove(function(e){
-	
-		if (movingPiece == null) return;
-		
-		var translateX = (e.pageX - downPageX) + movingPiece.data('offsetX');
-		var translateY = (e.pageY - downPageY) + movingPiece.data('offsetY');
-
-		transform(movingPiece, translateX, translateY);
-				
-		/* Have to return false, else firefox treats it like draging an image */
-		return false;
-	});
-});
+}
