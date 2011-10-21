@@ -243,6 +243,28 @@ function puzzle_solved() {
 	return puzzleSolved;
 }
 
+function restart_game() {
+
+		var newLevel = parseInt($("#input_level").val());
+		var newPieceLength = parseInt($("#input_piece_length").val());
+		
+		if (newLevel >= 4 && newLevel <= 20)
+		{
+			$("#input_level").val(newLevel);
+			level = newLevel;
+		}
+		
+		if (newPieceLength >= 3 && newPieceLength <= (level * level))
+		{
+			$("#input_piece_length").val(newPieceLength);
+			maxPieceLength = newPieceLength;
+		}
+		
+		initialize();
+		add_mouse_events();
+
+}
+
 jQuery.fn.center = function () {
     this.css("position","absolute");
     this.css("top", ( $(window).height() - this.height() ) / 2+$(window).scrollTop() + "px");

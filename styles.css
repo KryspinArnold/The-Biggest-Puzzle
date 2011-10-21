@@ -27,8 +27,8 @@ rect.segment{
 	opacity: 1;
 }
 
-input{
-	width: 30px;
+dt{
+	padding: 0px 20px;
 }
 
 #header{
@@ -53,8 +53,12 @@ input{
 	list-style-type: none;
 }
 
-dt{
-	padding: 0px 20px;
+#input_level, #input_piece_length{
+	width: 30px;
+}
+
+#input_winner {
+	width: 200px;
 }
 
 #copyright{
@@ -65,12 +69,11 @@ dt{
 }
 
 #popup{
-	font-size: 20px;
 	text-align: center;
 	display: none;
 	position: absolute;
 	background: #FFFFFF;
-	padding: 10px;
+	padding: 20px 10px;
 	z-index: 10;
 	min-height: 200px;
 	min-width: 200px;

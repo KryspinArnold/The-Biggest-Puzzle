@@ -23,9 +23,8 @@ document.write('<script type="text/javascript" src="initialize.js"></script>');
 
 $(document).ready(function() {
 
-	initialize();
-	add_mouse_events();
-	
+	restart_game();
+
     $(document).keypress(function(e){
         if (e.keyCode==27){
             $("#background").fadeOut("slow");
@@ -33,27 +32,20 @@ $(document).ready(function() {
         }
     });
  
-    $(".restart_button").click(function(){
+    $(".button_restart").click(function(){
         $("#background").fadeOut("slow");
         $("#popup").fadeOut("slow");
 		
-		var newLevel = parseInt($("#input_level").val());
-		var newPieceLength = parseInt($("#input_piece_length").val());
+		restart_game();
+    });
+ 
+    $(".button_winner").click(function(){
+        $("#background").fadeOut("slow");
+        $("#popup").fadeOut("slow");
 		
-		if (newLevel >= 4 && newLevel <= 20)
-		{
-			$("#input_level").val(newLevel);
-			level = newLevel;
-		}
+		$.post("addwinner.php", { name: $("#input_winner").val(), level: level, piecelength: maxPieceLength } );
 		
-		if (newPieceLength >= 3 && newPieceLength <= (level * level))
-		{
-			$("#input_piece_length").val(newPieceLength);
-			maxPieceLength = newPieceLength;
-		}
-		
-		initialize();
-		add_mouse_events();
+		restart_game();
     });
  
 	/* Mouse Up - Stops dragging the piece around */
