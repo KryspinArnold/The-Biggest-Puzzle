@@ -3,6 +3,9 @@ html, body, div{
 	padding: 0px;
 	font-family: Verdana, Geneva, sans-serif;
 	font-size: 14px;
+}
+
+html, body{
 	background-color: #385A72;
 }
 
@@ -31,6 +34,19 @@ dt{
 	padding: 0px 20px;
 }
 
+table{
+    border-width: 0 0 1px 1px;
+    border-style: solid;
+	border-spacing: 0px;
+}
+
+td, th{
+    border-width: 1px 1px 0 0;
+    border-style: solid;
+    margin: 0;
+    padding: 4px;
+}
+
 #header{
 	height: 60px;
 	text-align: center;
@@ -39,6 +55,10 @@ dt{
 
 #svg{
 	background-color: #6491A1;
+}
+
+#front {
+    z-index: 1;
 }
 
 #nav{
@@ -68,7 +88,7 @@ dt{
 	font-size: 12px;
 }
 
-#popup{
+.popup{
 	text-align: center;
 	display: none;
 	position: absolute;

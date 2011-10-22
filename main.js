@@ -25,29 +25,40 @@ $(document).ready(function() {
 
 	restart_game();
 
-    $(document).keypress(function(e){
-        if (e.keyCode==27){
-            $("#background").fadeOut("slow");
-            $("#popup").fadeOut("slow");
-        }
-    });
- 
-    $(".button_restart").click(function(){
-        $("#background").fadeOut("slow");
-        $("#popup").fadeOut("slow");
-		
+	$(document).keypress(function(e){
+		if (e.keyCode==27){
+			$("#background").fadeOut("slow");
+			$(".popup").fadeOut("slow");
+		}
+	});
+
+	$("#button_restart").click(function(){
 		restart_game();
-    });
- 
-    $(".button_winner").click(function(){
-        $("#background").fadeOut("slow");
-        $("#popup").fadeOut("slow");
+	});
+
+	$("#button_winner").click(function(){
+		$("#background").fadeOut("slow");
+		$("#popup_winner").fadeOut("slow");
 		
 		$.post("addwinner.php", { name: $("#input_winner").val(), level: level, piecelength: maxPieceLength } );
 		
 		restart_game();
-    });
- 
+	});
+	
+	$("#button_scoreboard").click(function(){
+	
+		$.post("scoreboard.php", function(data) {
+			$("#scoreboard").html(data);
+			$("#popup_scoreboard").center().fadeIn("slow");
+		});
+		$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
+	});
+	
+	$("#button_ok").click(function(){
+		$("#background").fadeOut("slow");
+		$("#popup_scoreboard").fadeOut("slow");
+	});	
+
 	/* Mouse Up - Stops dragging the piece around */
 	$(document).mouseup(function(e){
 		movingPiece = null;
@@ -55,7 +66,7 @@ $(document).ready(function() {
 		/* Check if the puzzle is solved */
 		if (puzzle_solved()){
 			$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
-			$("#popup").center().fadeIn("slow");
+			$("#popup_winner").center().fadeIn("slow");
 		}
 	
 		/* Have to return false, else firefox treats it like dragging an image */
@@ -84,13 +95,14 @@ function add_mouse_events()
 		
 		var segment = $(this);
 		var piece = $(this).parent(".piece");
+		
+		/* Bring the piece to the foreground */
+		$(this).parent().parent().append(piece);
 
 		/* Work out which mouse button was clicked */
 		switch (e.which) {
 			/* Left click for moving the piece */
 			case 1:
-				movingPiece = piece;
-			
 				downPageX = e.pageX;
 				downPageY = e.pageY;
 				
@@ -100,11 +112,8 @@ function add_mouse_events()
 				piece.data('offsetX', (piece.data('segOffsetX') - piece.data('startX')) + piece.offset().left);
 				piece.data('offsetY', (piece.data('segOffsetY') - piece.data('startY')) + piece.offset().top);
 				
-				/*$("#test1").html('Segment Offset ' + segment.offset().left + ', ' + segment.offset().top);
-				$("#test2").html('Piece Offset ' + piece.offset().left + ', ' + piece.offset().top);
-				$("#test3").html('Piece Data Offset ' + piece.data('offsetX') + ', ' + piece.data('offsetY'));
-				$("#test4").html('Piece Data Segment ' + piece.data('segmentX') + ', ' + piece.data('segmentY'));*/
-
+				movingPiece = piece;
+				
 				break;
 			case 2:
 				alert('Middle mouse button pressed');
@@ -125,13 +134,7 @@ function add_mouse_events()
 				
 				piece.data('offsetX', (segment.offset().left - piece.data('startX')) - parseFloat(segment.attr('x')));
 				piece.data('offsetY', (segment.offset().top - piece.data('startY')) - parseFloat(segment.attr('y')));
-				
-				/*$("#test1").html('Segment Offset ' + segment.offset().left + ', ' + segment.offset().top);
-				$("#test2").html('Piece Offset ' + piece.offset().left + ', ' + piece.offset().top);
-				$("#test3").html('Piece Data Offset ' + piece.data('offsetX') + ', ' + piece.data('offsetY'));
-				$("#test4").html('Piece Data Segment ' + piece.data('segmentX') + ', ' + piece.data('segmentY'));
-				$("#test5").html('Segment XY ' + parseFloat(segment.attr('x')) + ', ' + parseFloat(segment.attr('y')));*/
-				
+
 				transform(piece, piece.data('offsetX'), piece.data('offsetY'));
 				
 				piece.data('segOffsetX', ((segment.offset().left) - parseFloat(segment.attr('x')) - piece.offset().left));

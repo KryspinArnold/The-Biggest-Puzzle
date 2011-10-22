@@ -16,17 +16,23 @@
 			<dt id="level"></dt>
 			<dt id="piece_amount"></dt>
 			<dt id="piece_length"></dt>
-			<dt><button class="button_restart">Restart</button></dt>
+			<dt><button id="button_restart">Restart</button></dt>
+			<dt><button id="button_scoreboard">Scoreboard</button></dt>
 		</dl>
 	</div>
 	<div id="main"></div>
 	<div id="copyright">Copyright &copy; Kryspin Arnold 2011</div>
 	<div id="background"></div>
-	<div id="popup">
+	<div id="popup_winner" class="popup">
 		<h3>Congratulations! You win!</h3>
-		<p>Please enter you name for the score boards:</p>
+		<p>Please enter you name for the score board:</p>
 		<p><form><input type="text" id="input_winner"></form></p>
-		<p><button class="button_winner">Add Score</button></p>
+		<p><button id="button_winner">Add Score</button></p>
+	</div>
+	<div id="popup_scoreboard" class="popup">
+		<h3>Score board</h3>
+		<div id="scoreboard"></div>
+		<div><button id="button_ok">OK</button></div>
 	</div>
 	<div id="test1"></div>
 	<div id="test2"></div>
