@@ -1,8 +1,20 @@
 function initialize() {
 
 	var windowWidth = $(window).width();
+	squareSize = 50;
+	segmentXY = new Array();
+	squareXY = new Array();
+	
+	/* Don't want the board greater than a third of the screen */
+	var maxBoardSize = Math.floor(windowWidth / 3);
+	
+	if ((squareSize * level) > maxBoardSize)
+	{
+		squareSize = Math.floor(maxBoardSize / level);
+	}
+	
 	var leftMargin = Math.floor((windowWidth - (squareSize * level))/ 2);
-
+	
 	create_squares();
 	create_pieces();
 	create_colours();
@@ -29,15 +41,19 @@ function initialize() {
 	append += '</defs>';
 	
 	/* Creating the squares for the board */
+	board = new Array();
+	
 	for (var y = 0; y < level; y++)
 	{
 		for (var x = 0; x < level; x++)
 		{
-			var posX = ((x * squareSize) + 0.5) + leftMargin;
-			var posY = ((y * squareSize) + 0.5) + topMargin;
+			var posXY = new XY(((x * squareSize) + 0.5) + leftMargin, ((y * squareSize) + 0.5) + topMargin);
 
-			append += '<rect class="square" x=' + posX + ' y=' + posY
+			append += '<rect class="square" x=' + posXY.x + ' y=' + posXY.y
 				+ ' width="' + squareSize + '" height="' + squareSize + '" />';
+
+			squareXY.push(posXY);
+			board.push(-1);
 		}
 	}
 	
@@ -49,8 +65,8 @@ function initialize() {
 		for (var j = 0, lj = pieceData[i].length; j < lj; j++)
 		{
 			/* Base the position of each segment in the piece off the first segment */
-			var posX = (squares[pieceData[i][j]].x - squares[pieceData[i][0]].x) * squareSize;
-			var posY = (squares[pieceData[i][j]].y - squares[pieceData[i][0]].y) * squareSize;
+			var posX = (squareData[pieceData[i][j]].x - squareData[pieceData[i][0]].x) * squareSize;
+			var posY = (squareData[pieceData[i][j]].y - squareData[pieceData[i][0]].y) * squareSize;
 		
 			append += '<rect class="segment" fill="url(#colorGradient' + i + ')" x=' + (posX + 0.5) + ' y=' + (posY + 0.5) + ' width="' + squareSize + '" height="' + squareSize + '" rx=10 ry=10 />';
 		}
@@ -61,15 +77,21 @@ function initialize() {
 	append += '</svg>';
 	main.html(append);
 	
-	/* Add the Pieces to an Object */
+	/* Add data to the Pieces */
 	pieces = $(".piece");
-	pieces.data('offsetX', 0);
-	pieces.data('offsetY', 0);
-	pieces.data('segOffsetX', 0);
-	pieces.data('segOffsetY', 0);
-	pieces.data('rotation', 0);
-	pieces.data('corX', 0);
-	pieces.data('corY', 0);
+	
+	pieces.each(function(index){
+		/* Store the index as pieceID because the order changes when push pieces to the front */
+		$(this).data('pieceID', index);
+		$(this).data('offsetX', 0);
+		$(this).data('offsetY', 0);
+		$(this).data('segOffsetX', 0);
+		$(this).data('segOffsetY', 0);
+		$(this).data('rotation', 0);
+		$(this).data('corX', 0);
+		$(this).data('corY', 0);
+		$(this).data('solved', false);
+	});
 	
 	/* Firefox puts some funny padding on the Rect when there is a border this means that the offset is not right */
 	var firstSegment = pieces.first().children().first();
@@ -138,8 +160,8 @@ function initialize() {
 		}
 		
 		var negative = leftOrRight == 0 ? -1 : 1;
-		transform($(this), Math.floor((windowWidth + (negative * squareSize * level))/ 2) + (negative * (startingX[leftOrRight] + rightEdge))
-		, topMargin + startingY[leftOrRight]);
+		transform($(this), new XY(Math.floor((windowWidth + (negative * squareSize * level))/ 2) + (negative * (startingX[leftOrRight] + rightEdge))
+		, topMargin + startingY[leftOrRight]));
 		
 		/* Add the width and padding on */
 		startingX[leftOrRight] += $(this).data('width');

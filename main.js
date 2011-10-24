@@ -1,10 +1,13 @@
 /* Global Variables */
 var level = 5;
 var maxPieceLength = 4;
-var squareSize = 50;
+var squareSize;
 var pieces;
-var squares;
+var board;
+var segmentXY; /* The XY coordinates of the segments of a piece relative to its offset */
+var squareXY;
 var pieceData;
+var squareData;
 var freeSpaces;
 var colours;
 var baseLightColour = "CC";
@@ -32,10 +35,12 @@ $(document).ready(function() {
 		}
 	});
 
+	/* Restart Button */
 	$("#button_restart").click(function(){
 		restart_game();
 	});
 
+	/* Winner Button */
 	$("#button_winner").click(function(){
 		$("#background").fadeOut("slow");
 		$("#popup_winner").fadeOut("slow");
@@ -45,6 +50,7 @@ $(document).ready(function() {
 		restart_game();
 	});
 	
+	/* Show Scoreboard Button */
 	$("#button_scoreboard").click(function(){
 	
 		$.post("scoreboard.php", function(data) {
@@ -54,6 +60,26 @@ $(document).ready(function() {
 		$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
 	});
 	
+	$("#button_board").click(function(){
+		
+		var boardTable = "<table>";
+		for (var y = 0; y < level; y++) {
+		
+			boardTable += "<tr>";
+		
+			for (var x = 0; x < level; x++) {
+		
+				boardTable += "<td>" + board[(y * level) + x] + "</td>";
+
+			}
+			
+			boardTable += "</tr>";
+		}
+		
+		$("#test1").html(boardTable);
+	});
+	
+	/* Scoreboard OK Button */
 	$("#button_ok").click(function(){
 		$("#background").fadeOut("slow");
 		$("#popup_scoreboard").fadeOut("slow");
@@ -61,6 +87,8 @@ $(document).ready(function() {
 
 	/* Mouse Up - Stops dragging the piece around */
 	$(document).mouseup(function(e){
+	
+		if (movingPiece == null) return;
 		movingPiece = null;
 		
 		/* Check if the puzzle is solved */
@@ -78,10 +106,9 @@ $(document).ready(function() {
 	
 		if (movingPiece == null) return;
 		
-		var translateX = (e.pageX - downPageX) + movingPiece.data('offsetX');
-		var translateY = (e.pageY - downPageY) + movingPiece.data('offsetY');
+		var translateXY = new XY((e.pageX - downPageX) + movingPiece.data('offsetX'), (e.pageY - downPageY) + movingPiece.data('offsetY'));
 
-		transform(movingPiece, translateX, translateY);
+		transform(movingPiece, translateXY);
 				
 		/* Have to return false, else firefox treats it like draging an image */
 		return false;
@@ -96,9 +123,11 @@ function add_mouse_events()
 		var segment = $(this);
 		var piece = $(this).parent(".piece");
 		
+		create_segmentXY(piece);
+		
 		/* Bring the piece to the foreground */
 		$(this).parent().parent().append(piece);
-
+		
 		/* Work out which mouse button was clicked */
 		switch (e.which) {
 			/* Left click for moving the piece */
@@ -135,7 +164,7 @@ function add_mouse_events()
 				piece.data('offsetX', (segment.offset().left - piece.data('startX')) - parseFloat(segment.attr('x')));
 				piece.data('offsetY', (segment.offset().top - piece.data('startY')) - parseFloat(segment.attr('y')));
 
-				transform(piece, piece.data('offsetX'), piece.data('offsetY'));
+				transform(piece, new XY(piece.data('offsetX'), piece.data('offsetY')));
 				
 				piece.data('segOffsetX', ((segment.offset().left) - parseFloat(segment.attr('x')) - piece.offset().left));
 				piece.data('segOffsetY', ((segment.offset().top) - parseFloat(segment.attr('y')) - piece.offset().top));

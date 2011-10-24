@@ -6,6 +6,13 @@ function Square(x, y, pieceID)
 	this.pieceID = pieceID;
 }
 
+/* XY Coordinates */
+function XY(x, y)
+{
+	this.x = x;
+	this.y = y;
+}
+
 /* Colour class */
 /* We are given the light and dark hex values and the order to add everything together */
 function Colour(ldHex, order)

@@ -26,13 +26,13 @@ function create_colours() {
 /* Sets up the squares array */
 function create_squares() {
 
-	squares = new Array();
+	squareData = new Array();
 
 	for (var y = 0; y < level; y++)
 	{
 		for (var x = 0; x < level; x++)
 		{
-			squares.push(new Square(x, y, -1));
+			squareData.push(new Square(x, y, -1));
 		}
 	}
 }
@@ -44,10 +44,10 @@ function create_pieces() {
 	freeSpaces = new Array();
 	
 	/* Loop through all the squares on the board */
-	for (var i = 0, li = squares.length; i < li; i++) {
+	for (var i = 0, li = squareData.length; i < li; i++) {
 	
 		/* If the square is blank, then we want to create a new piece */
-		if (squares[i].pieceID == -1) {
+		if (squareData[i].pieceID == -1) {
 		
 			new_piece(i);
 			
@@ -80,7 +80,7 @@ function new_segment(squareID) {
 
 	/* Add the new segment to the piece */
 	pieceData[pieceData.length - 1].push(squareID);
-	squares[squareID].pieceID = (pieceData.length - 1);
+	squareData[squareID].pieceID = (pieceData.length - 1);
 
 	/* Adding possible free spaces to the current piece */
 	if (direction(squareID, 0) != -1) {
@@ -136,14 +136,14 @@ function direction(squareID, direction) {
 	}
 	
 	/* Check that the squareID isn't already used in another piece */
-	if (returnSquareID != -1 && squares[returnSquareID].pieceID != -1) {
+	if (returnSquareID != -1 && squareData[returnSquareID].pieceID != -1) {
 		returnSquareID = -1;
 	}
 	
 	return returnSquareID;
 }
 
-function transform(piece, translateX, translateY) {
+function transform(piece, translateXY) {
 
 	/* Works out how much to rotate the piece */
 	var rotate = piece.data('rotation');
@@ -151,96 +151,108 @@ function transform(piece, translateX, translateY) {
 	var corY = piece.data('corY');
 	
 	/* Snapping */
+	/* We are storing all the snapping data in the squarePieceID array, so that it is faster to access */
 	var snapped = true;
-	var snapSquares = $(".square");
+	var snapSquares = $(".square"); /* All the squares on the board */
+	var snapSquareIDs = new Array(); /* An array of squareIDs that are snapped to */
+	var pieceID = piece.data('pieceID');
 	
-	var actualX = (translateX - piece.data('segOffsetX'));
-	var actualY = (translateY - piece.data('segOffsetY'));
+	var actualX = (translateXY.x - piece.data('segOffsetX'));
+	var actualY = (translateXY.y - piece.data('segOffsetY'));
 	
 	/* Check each segment is snapped to a square */
-	piece.children().each(function() {
+	for (var seg = 0, lseg = segmentXY.length; seg < lseg; seg++) {
 	
-		var segment = $(this);
-	
-		var segmentSnapped = snapSquares.filter(function() {
-			return Math.abs($(this).attr('x') - (segment.offset().left - piece.data('startX'))) < snapAmount
-				&& Math.abs($(this).attr('y') - (segment.offset().top - piece.data('startY'))) < snapAmount;
-		}).first();
-	
-		if (segmentSnapped.length == 0) {
-			snapped = false;
-			return;
+		var squareID = -1;
+		
+		for (var sq = 0, lsq = squareXY.length; sq < lsq; sq++)	{
+		
+			if (Math.abs(squareXY[sq].x - ((segmentXY[seg].x + piece.offset().left) - piece.data('startX'))) < snapAmount
+				&& Math.abs(squareXY[sq].y - ((segmentXY[seg].y + piece.offset().top) - piece.data('startY'))) < snapAmount)
+			{
+				squareID = sq;
+				break;
+			}
 		}
-	});
+
+		/* Cancel the snap if a square doesn't exist or the square is not empty */
+		if (squareID == -1 || (board[squareID] != pieceID && board[squareID] != -1)) {
+			snapped = false;
+			break;
+		} else {
+			snapSquareIDs.push(squareID);
+		}
+	}
 	
-	/* Each segment has snapped */
+	/* Each segment has snapped to a square */
 	if (snapped) {
 	
-		/* Get the square that the piece is snapped to */
-		var pieceSnapped = snapSquares.filter(function() {
-				return Math.abs($(this).attr('x') - actualX) < snapAmount
-					&& Math.abs($(this).attr('y') - actualY) < snapAmount;
-			}).first();
+		var squareID = -1;
 	
-		if (pieceSnapped.length > 0) {
+		for (var sq = 0, lsq = squareXY.length; sq < lsq; sq++)	{
+		
+			if (Math.abs(squareXY[sq].x - actualX) < snapAmount
+				&& Math.abs(squareXY[sq].y - actualY) < snapAmount)
+			{
+				squareID = sq;
+				break;
+			}
+		}
 	
-			translateX = parseFloat(pieceSnapped.attr('x')) + piece.data('segOffsetX');
-			translateY = parseFloat(pieceSnapped.attr('y')) + piece.data('segOffsetY');
+		if (squareID != -1) {
+	
+			translateXY.x = parseFloat(squareXY[squareID].x) + piece.data('segOffsetX');
+			translateXY.y = parseFloat(squareXY[squareID].y) + piece.data('segOffsetY');
 		
 			piece.children().each(function() {
 				$(this).attr('rx', 0);
 				$(this).attr('ry', 0);
 			});
 			
-		} else {
+			/* Add all the squares that we snapped to, to the squarePieceID array */
+			for (var i = 0, li = snapSquareIDs.length; i < li; i++)
+			{
+				board[snapSquareIDs[i]] = pieceID;
+			}
+			
+			piece.data('solved', true);
+		}
+	} else {
 	
-			piece.children().each(function() {
-				$(this).attr('rx', 10);
-				$(this).attr('ry', 10);
-			});
+		piece.children().each(function() {
+			$(this).attr('rx', 10);
+			$(this).attr('ry', 10);
+		});
+		
+		/* Remove any reference from this piece from the board array */
+		for (var j = 0, lj = board.length; j < lj; j++) {
+		
+			if (board[j] == pieceID) {
+				board[j] = -1;
+			}
 		}
 	}
 	
 	/* Set bounds for the piece */
 	if (actualX < 0) {
-		translateX = piece.data('segOffsetX');
+		translateXY.x = piece.data('segOffsetX');
 	}
 	
 	if (actualY < 0) {
-		translateY = piece.data('segOffsetY');
+		translateXY.y = piece.data('segOffsetY');
 	}
 	
 	/* Finally do the transformation */
-	piece.attr('transform', 'translate(' + translateX + ', ' + translateY + ') rotate(' + rotate + ', ' + corX + ', ' + corY + ')');
+	piece.attr('transform', 'translate(' + translateXY.x + ', ' + translateXY.y + ') rotate(' + rotate + ', ' + corX + ', ' + corY + ')');
 }
 
 /* Checks if the puzzle has been solved by matching the xy positions of the squares to the piece segments */
 function puzzle_solved() {
 
-	var puzzleSolved = true;
-	var solvedSquares = $(".square");
-	var solvedSegments = $(".segment");
-	
-	/* Each square needs a segment on it */
-	solvedSquares.each(function() {
-	
-		var square = $(this);
-		
-		var segmentMatch = solvedSegments.filter(function() {
-			var piece = $(this).parent();
-			
-			return Math.abs(square.attr('x') - ($(this).offset().left - piece.data('startX'))) < snapAmount
-				&& Math.abs(square.attr('y') - ($(this).offset().top - piece.data('startY'))) < snapAmount;
+	/* jQuery returns -1 if the element is not found */
+	/* So in our case if -1 is not in board then it returns -1 :) */
 
-		}).first();
-		
-		if (segmentMatch.length == 0) {
-			puzzleSolved = false;
-			return;
-		}
-	});
-
-	return puzzleSolved;
+	return (jQuery.inArray(-1, board) == -1);
 }
 
 function restart_game() {
@@ -263,6 +275,16 @@ function restart_game() {
 		initialize();
 		add_mouse_events();
 
+}
+
+function create_segmentXY(piece) {
+
+	segmentXY = new Array();
+	/* Add all the piece points into an array */
+	piece.children().each(function() {
+		var segment = $(this);
+		segmentXY.push(new XY(segment.offset().left - piece.offset().left, segment.offset().top - piece.offset().top));
+	});
 }
 
 jQuery.fn.center = function () {
