@@ -4,7 +4,7 @@ date_default_timezone_set("Australia/Melbourne");
 
 include ('functions.php');
 
-$results = execute_sql("SELECT level, piecelength, name FROM Score ORDER BY level DESC LIMIT 0, 20;");
+$results = execute_sql("SELECT level, piecelength, name FROM Score ORDER BY level DESC LIMIT 0, 15;");
 
 printf('<table>');
 printf('<tr><th>Level</th><th>Piece Length</th><th>Name</th></tr>');

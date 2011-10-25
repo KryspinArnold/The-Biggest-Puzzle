@@ -10,7 +10,7 @@ var pieceData;
 var squareData;
 var freeSpaces;
 var colours;
-var baseLightColour = "CC";
+var baseLightColour = "AA"; /*"CC";*/
 var baseDarkColour = "66";
 var snapAmount = 10;
 var downPageX = 0;
