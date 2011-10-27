@@ -33,11 +33,6 @@ function initialize() {
 	append += '<defs>';
 	for (var i = 0; i < pieceData.length; i++)
 	{
-		/*append += '<linearGradient id="colorGradient' + i + '" x1="0%" y1="0%" 2="0%" y2="100%" spreadMethod="pad">'
-			+ '<stop offset="0%" stop-color="' + colours[i].light + '" stop-opacity="1" />'
-			+ '<stop offset="100%" stop-color="' + colours[i].dark + '" stop-opacity="1" />'
-			+ '</linearGradient>';*/
-			
 		append += '<radialGradient id="colorGradient' + i + '" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">'
 			+ '<stop offset="0%" stop-color="' + colours[i].light + '" stop-opacity="1" />'
 			+ '<stop offset="100%" stop-color="' + colours[i].dark + '" stop-opacity="1" />'

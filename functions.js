@@ -287,9 +287,16 @@ function create_segmentXY(piece) {
 	});
 }
 
-jQuery.fn.center = function () {
-    this.css("position","absolute");
-    this.css("top", ( $(window).height() - this.height() ) / 2+$(window).scrollTop() + "px");
-    this.css("left", ( $(window).width() - this.width() ) / 2+$(window).scrollLeft() + "px");
-    return this;
+jQuery.fn.center = function() {
+	this.css("position","absolute");
+	this.css("top", ( $(window).height() - this.height() ) / 2 + $(window).scrollTop() + "px");
+	this.css("left", ( $(window).width() - this.width() ) / 2 + $(window).scrollLeft() + "px");
+	return this;
+}
+
+function supports_inline_svg() {
+
+	var div = document.createElement('div');
+	div.innerHTML = '<svg/>';
+	return (div.firstChild && div.firstChild.namespaceURI) == 'http://www.w3.org/2000/svg';
 }

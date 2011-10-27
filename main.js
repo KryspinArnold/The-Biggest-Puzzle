@@ -26,93 +26,110 @@ document.write('<script type="text/javascript" src="initialize.js"></script>');
 
 $(document).ready(function() {
 
-	restart_game();
-
-	$(document).keypress(function(e){
-		if (e.keyCode==27){
-			$("#background").fadeOut("slow");
-			$(".popup").fadeOut("slow");
-		}
-	});
-
-	/* Restart Button */
-	$("#button_restart").click(function(){
-		restart_game();
-	});
-
-	/* Winner Button */
-	$("#button_winner").click(function(){
-		$("#background").fadeOut("slow");
-		$("#popup_winner").fadeOut("slow");
-		
-		$.post("addwinner.php", { name: $("#input_winner").val(), level: level, piecelength: maxPieceLength } );
-		
-		restart_game();
-	});
+	if (!supports_inline_svg()) {
 	
-	/* Show Scoreboard Button */
-	$("#button_scoreboard").click(function(){
+		$("#nav").hide();
+		$("#sub_header").hide();
+		
+		var noSvgHtml = '<div id="no_svg"><p>This game uses inline SVG which is unfortunately not supported by your browser. You will need to update you browser to play this game. Updating your browser only takes a few minutes and can make your web browsing a faster and more pleasurable experience!</p>'
+			+ '<p>Here are some links to help you update your browser:</p>'
+			+ '<ul><li>Mozilla Firefox: <a href="http://www.mozilla.org/en-US/firefox/new/" target="_blank">http://www.mozilla.org/en-US/firefox/new/</a></li>'
+			+ '<li>Google Chrome: <a href="http://www.google.com/chrome" target="_blank">http://www.google.com/chrome</a></li>'
+			+ '<li>Apple Safari: <a href="http://www.apple.com/safari/" target="_blank">http://www.apple.com/safari/</a></li>'
+			+ '<li>Internet Explorer: <a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">http://windows.microsoft.com/en-US/internet-explorer/downloads/ie</a></li></ul>';
+		
+		$("#main").html(noSvgHtml);
 	
-		$.post("scoreboard.php", function(data) {
-			$("#scoreboard").html(data);
-			$("#popup_scoreboard").center().fadeIn("slow");
+	} else {
+
+		restart_game();
+		
+		$(document).keypress(function(e){
+			if (e.keyCode==27){
+				$("#background").fadeOut("slow");
+				$(".popup").fadeOut("slow");
+			}
 		});
-		$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
-	});
-	
-	$("#button_board").click(function(){
-		
-		var boardTable = "<table>";
-		for (var y = 0; y < level; y++) {
-		
-			boardTable += "<tr>";
-		
-			for (var x = 0; x < level; x++) {
-		
-				boardTable += "<td>" + board[(y * level) + x] + "</td>";
 
+		/* Restart Button */
+		$("#button_restart").click(function(){
+			restart_game();
+		});
+
+		/* Winner Button */
+		$("#button_winner").click(function(){
+			$("#background").fadeOut("slow");
+			$("#popup_winner").fadeOut("slow");
+			
+			$.post("addwinner.php", { name: $("#input_winner").val(), level: level, piecelength: maxPieceLength } );
+			
+			restart_game();
+		});
+		
+		/* Show Scoreboard Button */
+		$("#button_scoreboard").click(function(){
+		
+			$.post("scoreboard.php", function(data) {
+				$("#scoreboard").html(data);
+				$("#popup_scoreboard").center().fadeIn("slow");
+			});
+			$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
+		});
+		
+		$("#button_board").click(function(){
+			
+			var boardTable = "<table>";
+			for (var y = 0; y < level; y++) {
+			
+				boardTable += "<tr>";
+			
+				for (var x = 0; x < level; x++) {
+			
+					boardTable += "<td>" + board[(y * level) + x] + "</td>";
+
+				}
+				
+				boardTable += "</tr>";
 			}
 			
-			boardTable += "</tr>";
-		}
+			$("#test1").html(boardTable);
+		});
 		
-		$("#test1").html(boardTable);
-	});
-	
-	/* Scoreboard OK Button */
-	$("#button_ok").click(function(){
-		$("#background").fadeOut("slow");
-		$("#popup_scoreboard").fadeOut("slow");
-	});	
+		/* Scoreboard OK Button */
+		$("#button_ok").click(function(){
+			$("#background").fadeOut("slow");
+			$("#popup_scoreboard").fadeOut("slow");
+		});	
 
-	/* Mouse Up - Stops dragging the piece around */
-	$(document).mouseup(function(e){
-	
-		if (movingPiece == null) return;
-		movingPiece = null;
+		/* Mouse Up - Stops dragging the piece around */
+		$(document).mouseup(function(e){
 		
-		/* Check if the puzzle is solved */
-		if (puzzle_solved()){
-			$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
-			$("#popup_winner").center().fadeIn("slow");
-		}
-	
-		/* Have to return false, else firefox treats it like dragging an image */
-		return false;
-	})
-
-	/* Mouse Move - Drags the piece around */
-	$(document).mousemove(function(e){
-	
-		if (movingPiece == null) return;
+			if (movingPiece == null) return;
+			movingPiece = null;
+			
+			/* Check if the puzzle is solved */
+			if (puzzle_solved()){
+				$("#background").css({"opacity" : "0.7"}).fadeIn("slow");
+				$("#popup_winner").center().fadeIn("slow");
+			}
 		
-		var translateXY = new XY((e.pageX - downPageX) + movingPiece.data('offsetX'), (e.pageY - downPageY) + movingPiece.data('offsetY'));
+			/* Have to return false, else firefox treats it like dragging an image */
+			return false;
+		})
 
-		transform(movingPiece, translateXY);
-				
-		/* Have to return false, else firefox treats it like draging an image */
-		return false;
-	});
+		/* Mouse Move - Drags the piece around */
+		$(document).mousemove(function(e){
+		
+			if (movingPiece == null) return;
+			
+			var translateXY = new XY((e.pageX - downPageX) + movingPiece.data('offsetX'), (e.pageY - downPageY) + movingPiece.data('offsetY'));
+
+			transform(movingPiece, translateXY);
+					
+			/* Have to return false, else firefox treats it like draging an image */
+			return false;
+		});
+	}
 });
 
 function add_mouse_events()
