@@ -157,21 +157,25 @@ function transform(piece, translateXY) {
 	var snapSquareIDs = new Array(); /* An array of squareIDs that are snapped to */
 	var pieceID = piece.data('pieceID');
 	
-	var actualX = (translateXY.x - piece.data('segOffsetX'));
-	var actualY = (translateXY.y - piece.data('segOffsetY'));
+	/* This is the top left corner of the piece in the svg */
+	var topLeftXY = new XY(translateXY.x - piece.data('segOffsetX'), (translateXY.y - piece.data('segOffsetY')));
+	
+	$("#test2").html("");
 	
 	/* Check each segment is snapped to a square */
 	for (var seg = 0, lseg = segmentXY.length; seg < lseg; seg++) {
 	
 		var squareID = -1;
 		
-		for (var sq = 0, lsq = squareXY.length; sq < lsq; sq++)	{
+		if (snapped) {
+			for (var sq = 0, lsq = squareXY.length; sq < lsq; sq++)	{
 		
-			if (Math.abs(squareXY[sq].x - ((segmentXY[seg].x + piece.offset().left) - piece.data('startX'))) < snapAmount
-				&& Math.abs(squareXY[sq].y - ((segmentXY[seg].y + piece.offset().top) - piece.data('startY'))) < snapAmount)
-			{
-				squareID = sq;
-				break;
+				if (Math.abs(squareXY[sq].x - ((segmentXY[seg].x + piece.offset().left) - piece.data('startX'))) < snapAmount
+					&& Math.abs(squareXY[sq].y - ((segmentXY[seg].y + piece.offset().top) - piece.data('startY'))) < snapAmount)
+				{
+					squareID = sq;
+					break;
+				}
 			}
 		}
 
@@ -191,8 +195,8 @@ function transform(piece, translateXY) {
 	
 		for (var sq = 0, lsq = squareXY.length; sq < lsq; sq++)	{
 		
-			if (Math.abs(squareXY[sq].x - actualX) < snapAmount
-				&& Math.abs(squareXY[sq].y - actualY) < snapAmount)
+			if (Math.abs(squareXY[sq].x - topLeftXY.x) < snapAmount
+				&& Math.abs(squareXY[sq].y - topLeftXY.y) < snapAmount)
 			{
 				squareID = sq;
 				break;
@@ -233,13 +237,32 @@ function transform(piece, translateXY) {
 		}
 	}
 	
+	/*
+	$("#test1").html(piece.data('width') + " " + piece.data('height'));
+	$("#test2").html(piece.data('segOffsetX') + " " + piece.data('segOffsetY'));
+	$("#test3").html(piece.offset().left + " " + piece.offset().top);
+	$("#test4").html(translateXY.x + " " + translateXY.y);
+	$("#test5").html(topLeftXY.x + " " + topLeftXY.y);
+	*/
+	
 	/* Set bounds for the piece */
-	if (actualX < 0) {
+	if (topLeftXY.x < 0) {
 		translateXY.x = piece.data('segOffsetX');
 	}
 	
-	if (actualY < 0) {
+	if (topLeftXY.y < 0) {
 		translateXY.y = piece.data('segOffsetY');
+	}
+	
+	if (!initializing)
+	{
+		if ((topLeftXY.y + piece.data('height')) > svgHeight) {
+			translateXY.y = (svgHeight - piece.data('height')) + piece.data('segOffsetY');
+		}
+	
+		if ((topLeftXY.x + piece.data('width')) > $(window).width()) {
+			translateXY.x = ($(window).width() - piece.data('width')) + piece.data('segOffsetX');
+		}
 	}
 	
 	/* Finally do the transformation */
@@ -280,14 +303,24 @@ function restart_game() {
 function create_segmentXY(piece) {
 
 	segmentXY = new Array();
+	var pieceSizeXY = new XY(0, 0);
+	
 	/* Add all the piece points into an array */
 	piece.children().each(function() {
 		var segment = $(this);
 		segmentXY.push(new XY(segment.offset().left - piece.offset().left, segment.offset().top - piece.offset().top));
+		
+		/* Get the maximum distance of the segment to get the height/width of the piece */
+		pieceSizeXY.x = Math.max(pieceSizeXY.x, segmentXY[segmentXY.length - 1].x);
+		pieceSizeXY.y = Math.max(pieceSizeXY.y, segmentXY[segmentXY.length - 1].y);
 	});
+	
+	piece.data('width', pieceSizeXY.x + squareSize);
+	piece.data('height', pieceSizeXY.y + squareSize);
 }
 
 jQuery.fn.center = function() {
+
 	this.css("position","absolute");
 	this.css("top", ( $(window).height() - this.height() ) / 2 + $(window).scrollTop() + "px");
 	this.css("left", ( $(window).width() - this.width() ) / 2 + $(window).scrollLeft() + "px");

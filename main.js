@@ -19,6 +19,8 @@ var downOffsetX = 0;
 var downOffsetY = 0;
 var topMargin = 40;
 var movingPiece = null;
+var svgHeight;
+var initializing = true;
 
 document.write('<script type="text/javascript" src="classes.js"></script>');
 document.write('<script type="text/javascript" src="functions.js"></script>');
@@ -31,8 +33,8 @@ $(document).ready(function() {
 		$("#nav").hide();
 		$("#sub_header").hide();
 		
-		var noSvgHtml = '<div id="no_svg"><p>This game uses inline SVG which is unfortunately not supported by your browser. You will need to update you browser to play this game. Updating your browser only takes a few minutes and can make your web browsing a faster and more pleasurable experience!</p>'
-			+ '<p>Here are some links to help you update your browser:</p>'
+		var noSvgHtml = '<div id="no_svg"><p>This game uses inline SVG which is unfortunately not supported by your browser. You will need to update you browser to play this game. Updating only takes a few minutes and can make your web browsing a faster and more pleasurable experience!</p>'
+			+ '<p>Here are some links to help you get started:</p>'
 			+ '<ul><li>Mozilla Firefox: <a href="http://www.mozilla.org/en-US/firefox/new/" target="_blank">http://www.mozilla.org/en-US/firefox/new/</a></li>'
 			+ '<li>Google Chrome: <a href="http://www.google.com/chrome" target="_blank">http://www.google.com/chrome</a></li>'
 			+ '<li>Apple Safari: <a href="http://www.apple.com/safari/" target="_blank">http://www.apple.com/safari/</a></li>'
@@ -121,11 +123,11 @@ $(document).ready(function() {
 		$(document).mousemove(function(e){
 		
 			if (movingPiece == null) return;
-			
+				
 			var translateXY = new XY((e.pageX - downPageX) + movingPiece.data('offsetX'), (e.pageY - downPageY) + movingPiece.data('offsetY'));
 
 			transform(movingPiece, translateXY);
-					
+						
 			/* Have to return false, else firefox treats it like draging an image */
 			return false;
 		});
@@ -137,7 +139,7 @@ function add_mouse_events()
 	/* Mouse down - Handles all the mouse clicks */
 	$(".segment").mousedown(function(e) {
 		
-		var segment = $(this);
+		var $segment = $(this);
 		var piece = $(this).parent(".piece");
 		
 		create_segmentXY(piece);
@@ -162,12 +164,12 @@ function add_mouse_events()
 				
 				break;
 			case 2:
-				alert('Middle mouse button pressed');
+				/*alert('Middle mouse button pressed');*/
 				break;
 			/* Right click for rotating the piece */
 			case 3:
-				var corX = parseFloat(segment.attr('x')) + Math.floor(squareSize / 2);
-				var corY = parseFloat(segment.attr('y')) + Math.floor(squareSize / 2);
+				var corX = parseFloat($segment.attr('x')) + Math.floor(squareSize / 2);
+				var corY = parseFloat($segment.attr('y')) + Math.floor(squareSize / 2);
 				
 				piece.data('corX', corX);
 				piece.data('corY', corY);
@@ -176,19 +178,19 @@ function add_mouse_events()
 
 				/* This is a bit complicated... I am getting the coordinates of the segment that you click on,
 				subtracting the start cordinates so we get the cordinates in the svg, then subtracting the 
-				coordinates of the segment inside the piece so we can get the coordinates that the piece needs to be translated */
+				coordinates of the segment inside the piece so we can get the coordinates that the piece needs to be translated! */
 				
-				piece.data('offsetX', (segment.offset().left - piece.data('startX')) - parseFloat(segment.attr('x')));
-				piece.data('offsetY', (segment.offset().top - piece.data('startY')) - parseFloat(segment.attr('y')));
+				piece.data('offsetX', ($segment.offset().left - piece.data('startX')) - parseFloat($segment.attr('x')));
+				piece.data('offsetY', ($segment.offset().top - piece.data('startY')) - parseFloat($segment.attr('y')));
 
 				transform(piece, new XY(piece.data('offsetX'), piece.data('offsetY')));
 				
-				piece.data('segOffsetX', ((segment.offset().left) - parseFloat(segment.attr('x')) - piece.offset().left));
-				piece.data('segOffsetY', ((segment.offset().top) - parseFloat(segment.attr('y')) - piece.offset().top));
+				piece.data('segOffsetX', (($segment.offset().left) - parseFloat($segment.attr('x')) - piece.offset().left));
+				piece.data('segOffsetY', (($segment.offset().top) - parseFloat($segment.attr('y')) - piece.offset().top));
 				
 				break;
 		}
-		
+
 		/* Have to return false, else firefox treats it like draging an image */
 		return false;
 	});

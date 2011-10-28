@@ -1,4 +1,6 @@
 function initialize() {
+	
+	initializing = true;
 
 	var windowWidth = $(window).width();
 	squareSize = 50;
@@ -43,10 +45,10 @@ function initialize() {
 	/* Creating the squares for the board */
 	board = new Array();
 	
-	for (var y = 0; y < level; y++)
-	{
-		for (var x = 0; x < level; x++)
-		{
+	for (var y = 0; y < level; y++) {
+	
+		for (var x = 0; x < level; x++) {
+		
 			var posXY = new XY(((x * squareSize) + 0.5) + leftMargin, ((y * squareSize) + 0.5) + topMargin);
 
 			append += '<rect class="square" x=' + posXY.x + ' y=' + posXY.y
@@ -58,12 +60,12 @@ function initialize() {
 	}
 	
 	/* Create all the pieces */
-	for (var i = 0, li = pieceData.length; i < li; i++)
-	{
+	for (var i = 0, li = pieceData.length; i < li; i++)	{
+	
 		append += '<g class="piece">';
 	
-		for (var j = 0, lj = pieceData[i].length; j < lj; j++)
-		{
+		for (var j = 0, lj = pieceData[i].length; j < lj; j++) {
+		
 			/* Base the position of each segment in the piece off the first segment */
 			var posX = (squareData[pieceData[i][j]].x - squareData[pieceData[i][0]].x) * squareSize;
 			var posY = (squareData[pieceData[i][j]].y - squareData[pieceData[i][0]].y) * squareSize;
@@ -179,12 +181,13 @@ function initialize() {
 	});
 	
 	/* Either the height of the pieces on left/right or height of the board */
-	var svgHeight = Math.max(startingY[0] + biggestHeight[0], startingY[1] + biggestHeight[1], (squareSize * level));
+	svgHeight = Math.max(startingY[0] + biggestHeight[0], startingY[1] + biggestHeight[1], (squareSize * level)) + (topMargin * 2);
 	
-	$("#svg").attr('height', svgHeight + (topMargin * 2));
+	$("#svg").attr('height', svgHeight);
 	
 	$("#level").html('<b>Level:</b> <input type="text" id="input_level" value="' + level + '">');
 	$("#piece_amount").html('<b>Pieces:</b> ' + pieces.length);
 	$("#piece_length").html('<b>Max Piece Length:</b> <input type="text" id="input_piece_length" value="' + maxPieceLength + '">');
 	
+	initializing = false;
 };
