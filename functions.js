@@ -160,7 +160,7 @@ function transform(piece, translateXY) {
 	/* This is the top left corner of the piece in the svg */
 	var topLeftXY = new XY(translateXY.x - piece.data('segOffsetX'), (translateXY.y - piece.data('segOffsetY')));
 	
-	$("#test2").html("");
+	/*$("#test2").html("");*/
 	
 	/* Check each segment is snapped to a square */
 	for (var seg = 0, lseg = segmentXY.length; seg < lseg; seg++) {
